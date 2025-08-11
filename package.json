@@ -1,0 +1,17 @@
+{
+  "name": "arbitros-assigner",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [],
+  "scripts": {
+    "install-all": "cd server && npm i && cd ../client && npm i",
+    "dev": "concurrently -k -n server,client -c auto \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "cd server && node server.js",
+    "dev:client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && node server.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
