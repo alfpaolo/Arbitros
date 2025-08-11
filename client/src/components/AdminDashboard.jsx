@@ -103,6 +103,52 @@ export default function AdminDashboard({ session, onLogout }){
       </Section>
     </div>
 
+    <Section title="Árbitros">
+      <form className="grid sm:grid-cols-2 gap-3" onSubmit={async (e)=>{
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const body = Object.fromEntries(fd.entries());
+        const r = await api('/api/referees', { method:'POST', body: JSON.stringify(body) });
+        setRefs(prev => [...prev, r]);
+        e.target.reset();
+      }}>
+        <input name="nombre" required placeholder="Nombre del árbitro" className="border rounded-xl p-2" />
+        <button className="bg-gray-900 text-white rounded-xl py-2">Agregar</button>
+      </form>
+
+      <ul className="mt-3 space-y-2">
+        {refs.map(r => (
+          <li key={r.id} className="flex items-center justify-between p-2 border rounded-xl">
+            <span>{r.nombre}</span>
+            <div className="flex items-center gap-2">
+              {/* Renombrar (rápido) */}
+              <button
+                className="text-sm border rounded-lg px-2 py-1"
+                onClick={async ()=>{
+                  const nuevo = prompt('Nuevo nombre', r.nombre);
+                  if(!nuevo) return;
+                  const upd = await api(`/api/referees/${r.id}`, { method:'PUT', body: JSON.stringify({ nombre: nuevo }) });
+                  setRefs(prev => prev.map(x => x.id===r.id ? upd : x));
+                }}>
+                Renombrar
+              </button>
+
+              {/* Eliminar */}
+              <button
+                className="text-sm text-red-600"
+                onClick={async ()=>{
+                  if(!confirm('¿Eliminar árbitro y su disponibilidad?')) return;
+                  await api(`/api/referees/${r.id}`, { method:'DELETE' });
+                  setRefs(prev => prev.filter(x => x.id!==r.id));
+                }}>
+                Eliminar
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Section>
+
     <Section title="Asignaciones">
       <div className="flex items-center gap-3 mb-3">
         <button onClick={autoAssign} className="bg-emerald-600 text-white rounded-xl px-3 py-2">Asignación automática</button>
