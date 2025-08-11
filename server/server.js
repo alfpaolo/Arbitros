@@ -78,9 +78,7 @@ app.put("/api/referees/:id", (req, res) => {
 app.delete("/api/referees/:id", (req, res) => {
   const db = loadDB();
   db.referees = db.referees.filter(r => r.id !== req.params.id);
-  // borrar disponibilidad asociada (opcional pero útil)
   db.availability = db.availability.filter(a => a.refereeId !== req.params.id);
-  // remover de asignaciones donde aparezca (opcional)
   db.assignments = db.assignments.map(a => ({
     ...a,
     referee1Id: a.referee1Id === req.params.id ? null : a.referee1Id,
