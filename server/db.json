@@ -1,0 +1,46 @@
+{
+  "clubs": [
+    {
+      "id": "c1",
+      "nombre": "Club A",
+      "direccion": "Calle 123",
+      "lat": -31.741,
+      "lon": -60.511
+    },
+    {
+      "id": "c2",
+      "nombre": "Club B",
+      "direccion": "Av. Central 456",
+      "lat": -31.759,
+      "lon": -60.51
+    },
+    {
+      "id": "c3",
+      "nombre": "Club C",
+      "direccion": "Boulevard 789",
+      "lat": -31.76,
+      "lon": -60.525
+    }
+  ],
+  "referees": [
+    {
+      "id": "r1",
+      "nombre": "Juan Pérez"
+    },
+    {
+      "id": "r2",
+      "nombre": "María Gómez"
+    },
+    {
+      "id": "r3",
+      "nombre": "Luis Fernández"
+    },
+    {
+      "id": "r4",
+      "nombre": "Ana López"
+    }
+  ],
+  "availability": [],
+  "matches": [],
+  "assignments": []
+}
