@@ -14,6 +14,8 @@ export default function AdminDashboard({ session, onLogout }){
   const [refs, setRefs] = useState([])
   const [matches, setMatches] = useState([])
   const [assignments, setAssignments] = useState([])
+  const [avail, setAvail] = useState([]);
+
 
   async function loadAll(){
     const [c,r,m,a] = await Promise.all([
@@ -146,6 +148,29 @@ export default function AdminDashboard({ session, onLogout }){
             </div>
           </li>
         ))}
+      </ul>
+    </Section>
+
+    <Section title="Disponibilidad (vista admin)">
+      <div className="grid sm:grid-cols-3 gap-3">
+        <select id="refSel" className="border rounded-2xl p-2"
+          onChange={async e=>{
+            const id = e.target.value;
+            if(!id) { setAvail([]); return; }
+            const items = await api(`/api/availability/${id}`);
+            setAvail(items);
+          }}>
+          <option value="">Elegir árbitro…</option>
+          {refs.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+        </select>
+      </div>
+      <ul className="mt-3 space-y-1">
+        {avail.map(a => (
+          <li key={a.id} className="text-sm text-gray-700">
+            {["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"][a.dayOfWeek]} · {a.from}–{a.to}
+          </li>
+        ))}
+        {!avail?.length && <li className="text-sm text-gray-400">Sin datos</li>}
       </ul>
     </Section>
 
