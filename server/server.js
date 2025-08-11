@@ -1,16 +1,22 @@
-
 import express from "express";
 import cors from "cors";
 import { readFileSync, writeFileSync } from "fs";
 import { nanoid } from "nanoid";
 import { autoAssign } from "./assignment.js";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// CORS (si todo corre en una sola URL, no es estrictamente necesario, pero no molesta)
 app.use(cors());
 app.use(express.json());
 
+// --- Helpers DB (persistencia simple en JSON) ---
 function loadDB() {
   return JSON.parse(readFileSync(new URL("./db.json", import.meta.url)));
 }
@@ -18,16 +24,17 @@ function saveDB(db) {
   writeFileSync(new URL("./db.json", import.meta.url), JSON.stringify(db, null, 2));
 }
 
-// --- Auth (demo) ---
+// -------------------- RUTAS API --------------------
+// Auth (demo)
 app.post("/api/login", (req, res) => {
-  const { role, refereeId } = req.body; // role: "admin" | "referee"
+  const { role, refereeId } = req.body; // "admin" | "referee"
   if (role === "admin") return res.json({ ok: true, role });
   if (role === "referee" && refereeId) return res.json({ ok: true, role, refereeId });
   return res.status(400).json({ ok: false, error: "Credenciales inválidas (demo)" });
 });
 
-// --- Clubs ---
-app.get("/api/clubs", (req, res) => {
+// Clubs
+app.get("/api/clubs", (_req, res) => {
   const db = loadDB();
   res.json(db.clubs);
 });
@@ -40,7 +47,7 @@ app.post("/api/clubs", (req, res) => {
 });
 app.put("/api/clubs/:id", (req, res) => {
   const db = loadDB();
-  const idx = db.clubs.findIndex(c => c.id === req.params.id);
+  const idx = db.clubs.findIndex((c) => c.id === req.params.id);
   if (idx === -1) return res.status(404).end();
   db.clubs[idx] = { ...db.clubs[idx], ...req.body };
   saveDB(db);
@@ -48,13 +55,13 @@ app.put("/api/clubs/:id", (req, res) => {
 });
 app.delete("/api/clubs/:id", (req, res) => {
   const db = loadDB();
-  db.clubs = db.clubs.filter(c => c.id !== req.params.id);
+  db.clubs = db.clubs.filter((c) => c.id !== req.params.id);
   saveDB(db);
   res.json({ ok: true });
 });
 
-// --- Referees ---
-app.get("/api/referees", (req, res) => {
+// Referees
+app.get("/api/referees", (_req, res) => {
   const db = loadDB();
   res.json(db.referees);
 });
@@ -66,10 +73,10 @@ app.post("/api/referees", (req, res) => {
   res.json(ref);
 });
 
-// --- Availability ---
+// Availability
 app.get("/api/availability/:refereeId", (req, res) => {
   const db = loadDB();
-  res.json(db.availability.filter(a => a.refereeId === req.params.refereeId));
+  res.json(db.availability.filter((a) => a.refereeId === req.params.refereeId));
 });
 app.post("/api/availability", (req, res) => {
   const db = loadDB();
@@ -80,13 +87,13 @@ app.post("/api/availability", (req, res) => {
 });
 app.delete("/api/availability/:id", (req, res) => {
   const db = loadDB();
-  db.availability = db.availability.filter(a => a.id !== req.params.id);
+  db.availability = db.availability.filter((a) => a.id !== req.params.id);
   saveDB(db);
   res.json({ ok: true });
 });
 
-// --- Matches ---
-app.get("/api/matches", (req, res) => {
+// Matches
+app.get("/api/matches", (_req, res) => {
   const db = loadDB();
   res.json(db.matches);
 });
@@ -99,7 +106,7 @@ app.post("/api/matches", (req, res) => {
 });
 app.put("/api/matches/:id", (req, res) => {
   const db = loadDB();
-  const idx = db.matches.findIndex(m => m.id === req.params.id);
+  const idx = db.matches.findIndex((m) => m.id === req.params.id);
   if (idx === -1) return res.status(404).end();
   db.matches[idx] = { ...db.matches[idx], ...req.body };
   saveDB(db);
@@ -107,17 +114,17 @@ app.put("/api/matches/:id", (req, res) => {
 });
 app.delete("/api/matches/:id", (req, res) => {
   const db = loadDB();
-  db.matches = db.matches.filter(m => m.id !== req.params.id);
+  db.matches = db.matches.filter((m) => m.id !== req.params.id);
   saveDB(db);
   res.json({ ok: true });
 });
 
-// --- Assignments ---
-app.get("/api/assignments", (req, res) => {
+// Assignments
+app.get("/api/assignments", (_req, res) => {
   const db = loadDB();
   res.json(db.assignments);
 });
-app.post("/api/assignments/auto", (req, res) => {
+app.post("/api/assignments/auto", (_req, res) => {
   const db = loadDB();
   const result = autoAssign(db);
   saveDB(db);
@@ -125,7 +132,7 @@ app.post("/api/assignments/auto", (req, res) => {
 });
 app.patch("/api/assignments/:matchId", (req, res) => {
   const db = loadDB();
-  const a = db.assignments.find(x => x.matchId === req.params.matchId);
+  const a = db.assignments.find((x) => x.matchId === req.params.matchId);
   if (!a) return res.status(404).end();
   const { referee1Id, referee2Id } = req.body;
   if (referee1Id !== undefined) a.referee1Id = referee1Id;
@@ -134,6 +141,15 @@ app.patch("/api/assignments/:matchId", (req, res) => {
   res.json(a);
 });
 
+// ---------------- Servir FRONTEND (build de Vite) ----------------
+app.use(express.static(join(__dirname, "../client/dist")));
+
+// SPA fallback: cualquier ruta que NO empiece con /api devuelve index.html
+app.get(/^(?!\/api).*/, (_req, res) => {
+  res.sendFile(join(__dirname, "../client/dist/index.html"));
+});
+
+// ---------------------------------------------------------------
 app.listen(PORT, () => {
-  console.log(`API listening on http://localhost:${PORT}`);
+  console.log(`API + Frontend sirviendo en http://localhost:${PORT}`);
 });
